@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Holidayfarm -Leaflet</title>
+
+    <!--put your external stylesheet links here-->
+    <!--fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ========= Leaflet ========== -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+      integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+      crossorigin=""
+    />
+    <!--zoomhome plugin-->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="lib/leaflet.zoomhome-master/dist/leaflet.zoomhome.css"
+    />
+    <!--END zoomhome-->
+
+    <!-- ========= main css ========== -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!--[if IE<9]>
+      <link rel="stylesheet" href="css/style.ie.css" />
+    <![endif]-->
+    <!--this eliminates the Favicon error in the console-->
+    <link rel="shortcut icon" href="#" />
+  </head>
+
+  <body>
+    <div id="title">
+      <h1>Holiday Farm Fire Recovery</h1>
+    </div>
+    <div id="counter">
+      <div id="headrow">
+        <div class="countBox ns">Not Started</div>
+        <div class="countBox ip">In Progress</div>
+        <div class="countBox ss">Some Structures Complete</div>
+        <div class="countBox as">All Structures Complete</div>
+        <div class="countBox sd">Sold</div>
+      </div>
+      <div id="countrow">
+        <div class="countBox ns" id="NotStarted"></div>
+        <div class="countBox ip" id="InProgress"></div>
+        <div class="countBox ss" id="SomePermCompleteSomeNot"></div>
+        <div class="countBox as" id="PermComplete"></div>
+        <div class="countBox sd" id="sold"></div>
+      </div>
+    </div>
+    <div class="flex-container">
+      <div id="map"></div>
+      <div id="selectedFeatures">
+        <table>
+          <tr>
+            <th>MapTaxLot:</th>
+            <td id="maplot">No Data</td>
+          </tr>
+          <tr>
+            <th>Address:</th>
+            <td id="address">No Data</td>
+          </tr>
+          <tr>
+            <th>Structure Damage:</th>
+            <td id="damage">No Data</td>
+          </tr>
+          <tr>
+            <th>Rebuild Status:</th>
+            <td id="rebuild">No Data</td>
+          </tr>
+          <tr>
+            <th>Temp Housing:</th>
+            <td id="tempHousing">No Data</td>
+          </tr>
+          <tr>
+            <th>Sale Date:</th>
+            <td id="sales">No Data</td>
+          </tr>
+        </table>
+        <div id="clearButtonDiv"><button id="clearButton">Clear</button></div>
+      </div>
+    </div>
+
+    <!----external script links here------------->
+    <!-- ========= jQuery ========== -->
+    <script type="text/javascript" src="lib/jquery-3.6.0.js" id="S1"></script>
+
+    <!-- ========= Leaflet ========== -->
+    <script
+      src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+      integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+      crossorigin=""
+    ></script>
+
+    <!-- ========= Load Esri Leaflet  ========== -->
+    <script src="https://unpkg.com/esri-leaflet@^3.0.8/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@3.1.3/dist/esri-leaflet-vector.js"></script>
+
+    <!-- Load Esri Leaflet Renderers -->
+    <!-- This will hook into Esri Leaflet to get renderer info when adding a feature layer -->
+    <!-- <script src="https://unpkg.com/esri-leaflet-renderers@3"></script> -->
+
+    <!--leaflet zoom with home button-->
+    <script src="lib/leaflet.zoomhome-master/dist/leaflet.zoomhome.js"></script>
+
+    <!-- ========= main.js ========== -->
+    <script type="text/javascript" src="js/main.js" id="S4"></script>
+  </body>
+</html>

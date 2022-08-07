@@ -1,0 +1,10 @@
+//make VS Code properly implement jQuery intellisense
+//must be added to every project
+
+{
+    "typeAcquisition": {
+        "include": [
+            "jquery"
+        ]
+    }
+}
