@@ -131,6 +131,11 @@ td {
   border-left: 0.1rem solid white;
 }
 
+.count:hover {
+  outline: 0.1em dashed white;
+  outline-offset: -0.15em;
+}
+
 .ns {
   background-color: rgba(255, 170, 0, 0.5);
 }

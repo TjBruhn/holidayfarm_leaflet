@@ -220,6 +220,10 @@ function createMap() {
 
   //===== event listeners to produce counts =====
   countFeatures(map, rebuild, sales);
+
+  //add filter filtered is used to determine whether to filter or restore the map
+  var filtered = false;
+  filter(map, rebuild, sales, filtered);
 } //XXX END createMap
 
 //==== create dynamic map layers ====
@@ -329,6 +333,7 @@ function multiAddr(featureCollection) {
   }
 }
 
+//Dynamically populate the count bar with counts of feature in visable in the view
 function countFeatures(map, rebuild, sales) {
   map.on("layeradd  moveend", function (event) {
     //count rebuild status in view
@@ -382,6 +387,64 @@ function countFeatures(map, rebuild, sales) {
           $("#tempHouse").html(count);
         }
       });
+  });
+}
+
+//applyfilters when counter box is clicked
+function filter(map, rebuild, sales, filtered) {
+  $(".countBox.count").on("click ", function (event) {
+    //hide everything but this also dispalys everything on second click
+    var allElse = ".countBox:not(." + this.classList[2] + ")";
+    $(allElse).toggle();
+
+    //array for determining if this is a rebuild status
+    var status = [
+      "NotStarted",
+      "InProgress",
+      "SomePermCompleteSomeNot",
+      "PermComplete",
+    ];
+    if (filtered) {
+      //if currently filtered change filtered and restore all layers
+      filtered = false;
+      map.addLayer(sales);
+      map.addLayer(rebuild);
+      //reset layer defs to include all original features
+      rebuild.setLayerDefs({
+        0: "TempHousing='Yes'",
+        1: "OBJECTID>0",
+      });
+    } else {
+      //if not currently filtered change filtered and filter layers
+      filtered = true;
+      //apply filters
+      if (status.includes(this.id)) {
+        //make sure layer is added to map
+        map.addLayer(rebuild);
+        //filter rebuild status layer (1) by status and filter temp housing (0) to hide it
+        rebuild.setLayerDefs({
+          1: "RebuildStatus='" + this.id + "'",
+          0: "TempHousing='No'",
+        });
+        //turn off sales
+        map.removeLayer(sales);
+      } else if (this.id === "sold") {
+        //make sure layer is added to map
+        map.addLayer(sales);
+        //turn off sales
+        map.removeLayer(rebuild);
+      } else if (this.id === "tempHouse") {
+        //make sure layer is added to map
+        map.addLayer(rebuild);
+        //set temp housing (0) to yes to show and filter rebuild status layer (1) bu null to hide it
+        rebuild.setLayerDefs({
+          0: "TempHousing='Yes'",
+          1: "RebuildStatus='null'",
+        });
+        //turn off sales
+        map.removeLayer(sales);
+      }
+    }
   });
 }
 
