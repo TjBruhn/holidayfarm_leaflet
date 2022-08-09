@@ -71,7 +71,7 @@ function createMap() {
     Parcels: parcels,
     Sales: sales,
     "Rebuild Status": rebuild,
-    "Damage Assessment": damage,
+    "Structure Damage": damage,
     Address: address,
   };
 
@@ -82,7 +82,7 @@ function createMap() {
 
   //==== create event listener to send data to panel on click ====
   let identifiedFeature;
-  //const pane = $("#selectedFeatures");
+
   let tableElems = [
     "#maplot",
     "#address",
@@ -119,6 +119,7 @@ function createMap() {
           );
           //open pane zoom to feature
           activatePane(map, identifiedFeature);
+
           //write all intersecting maplot #s to pane
           var maplot = featureCollection.features[0].properties.maptaxlot;
           $("#maplot").html(maplot);
@@ -143,7 +144,7 @@ function createMap() {
             });
         }
       });
-
+    //identify the feature clicked in rebuild
     rebuild
       .identify()
       .layers(1) // just the parcels sublayer
@@ -212,13 +213,13 @@ function createMap() {
         $(element).html("No Data");
       });
     }
-    $("#map").css({ width: "100%", "border-radius": "1em" });
+    $("#map").css({ width: "100%", "border-radius": "0 0 1em 1em" });
     $("#selectedFeatures").css("display", "none");
     map.invalidateSize();
   });
 
   //===== event listeners to produce counts =====
-  countRebuild(map, rebuild);
+  countFeatures(map, rebuild, sales);
 } //XXX END createMap
 
 //==== create dynamic map layers ====
@@ -250,7 +251,7 @@ function addAssessDamageLayer(map) {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/RightOfEntry/MapServer",
     layers: [3],
-    opacity: 0.5,
+    opacity: 1,
   });
 }
 
@@ -260,16 +261,6 @@ function addAddressLayer(map) {
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer",
     layers: [0, 3], //0=address points 3=building footprint
   });
-  // .bindPopup(function (error, featureCollection) {
-  //   if (error || featureCollection.features.length === 0) {
-  //     return false;
-  //   } else {
-  //     return (
-  //       "Address: " +
-  //       featureCollection.features[0].properties["Concatenated Full Address"]
-  //     );
-  //   }
-  // });
 }
 
 //add address labels to the map
@@ -296,7 +287,7 @@ function addAddrLabels(map) {
 //==== other functions ====
 //make map and pane dynamic used in map.on-click
 function activatePane(map, identifiedFeature) {
-  $("#map").css({ width: "65%", "border-radius": "1em 0 0 1em" });
+  $("#map").css({ width: "65%", "border-radius": "0 0 0 1em" });
   map.invalidateSize();
   $("#selectedFeatures").css("display", "flex");
 
@@ -338,16 +329,18 @@ function multiAddr(featureCollection) {
   }
 }
 
-function countRebuild(map, rebuild) {
-  map.on("moveend", function () {
+function countFeatures(map, rebuild, sales) {
+  map.on("layeradd  moveend", function (event) {
+    //count rebuild status in view
+    //set array to loop through possible statuses
     var status = [
       "NotStarted",
       "InProgress",
       "SomePermCompleteSomeNot",
       "PermComplete",
     ];
-    status.forEach(count);
-    function count(statusItem) {
+    //function to count all features using status Item as where clause
+    function countRebuild(statusItem) {
       rebuild
         .query()
         .layer(1)
@@ -361,6 +354,34 @@ function countRebuild(map, rebuild) {
           }
         });
     }
+    //loop through each status and call count function
+    status.forEach(countRebuild);
+
+    //count sales in view
+    sales
+      .query()
+      .layer(0)
+      .intersects(map.getBounds())
+      .count(function (error, count) {
+        if (error) {
+          console.log(error);
+        } else {
+          $("#sold").html(count);
+        }
+      });
+
+    rebuild
+      .query()
+      .layer(0)
+      .where("TempHousing='Yes'")
+      .intersects(map.getBounds())
+      .count(function (error, count) {
+        if (error) {
+          console.log(error);
+        } else {
+          $("#tempHouse").html(count);
+        }
+      });
   });
 }
 

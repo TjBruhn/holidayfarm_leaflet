@@ -8,11 +8,6 @@ body {
   font-family: "Montserrat", sans-serif;
 }
 
-:where(h1, h2, h3) {
-  font-family: "Montserrat", sans-serif;
-  text-shadow: 3px 2px 4px white;
-}
-
 .button {
   font-family: "Montserrat", sans-serif;
   background-color: rgba(255, 255, 255, 0.7);
@@ -33,18 +28,13 @@ body {
   */
 #title {
   text-align: center;
-  margin-bottom: 0.35em;
-  /* padding: 0.15em; */
-  /* margin-bottom: 1em; */
-  /* background-image: radial-gradient(
-    rgba(255, 255, 255, 0.7) 50%,
-    rgba(255, 255, 255, 0.35),
-    rgba(255, 255, 255, 0)
-  ); */
-  /* border-radius: 2em; */
+  padding: 0.35em 0em 0.35em 0em; /*top/right/bot/left */
+  background-color: rgba(255, 255, 255, 0.8);
 }
 #title h1 {
   margin: 0;
+  font-family: "Montserrat", sans-serif;
+  color: darkslategrey;
 }
 
 /* 
@@ -56,7 +46,7 @@ body {
   width: 100%;
   display: inline-block;
   font-family: "Montserrat", sans-serif;
-  border-radius: 1em;
+  border-radius: 0 0 1em 1em;
 }
 
 /* 
@@ -69,7 +59,7 @@ body {
   flex-direction: column;
   height: 80vh;
   background: white;
-  border-radius: 0 1em 1em 0;
+  border-radius: 0 0 1em 0;
   align-items: center;
 }
 
@@ -112,10 +102,8 @@ td {
   flex-direction: column;
   width: 100%;
   height: 4em;
-  /* background-color: darkcyan; */
   align-items: center;
   text-align: center;
-
   font-weight: bolder;
   color: white;
 }
@@ -126,6 +114,7 @@ td {
   width: 100%;
   font-size: small;
 }
+
 #countrow {
   display: flex;
   flex-direction: row;
@@ -135,6 +124,10 @@ td {
 }
 .countBox {
   flex: 1 1 0;
+}
+
+.countBox:not(.ns) {
+  /*all the countboxes except the first one*/
   border-left: 0.1rem solid white;
 }
 
@@ -154,6 +147,29 @@ td {
   background-color: rgba(76, 230, 0, 0.5);
 }
 
-.sd {
+.sd:not(#sold) {
   background-color: #bc3df2;
+}
+
+#sold {
+  background-image: radial-gradient(#bc3df2 20%, rgba(0, 0, 0, 0) 20%);
+  background-position: 0 0;
+  background-size: 12px 12px;
+  text-shadow: 0.1em 0 0.4em #bc3df2, -0.1em 0 0.4em #bc3df2;
+}
+
+.temp {
+  background-color: darkgray;
+}
+
+#tempHouse {
+  /*make stripped lines*/
+  background: repeating-linear-gradient(
+    -45deg,
+    /*start with */ black 0px,
+    /*end at */ black 2px,
+    /*start with */ rgba(0, 0, 0, 0) 2px,
+    /*end at */ rgba(0, 0, 0, 0) 10px
+  );
+  text-shadow: 0.1em 0 0.4em black, -0.1em 0 0.4em black;
 }
