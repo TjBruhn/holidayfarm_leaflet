@@ -160,9 +160,7 @@ function createMap() {
   //add event listener to clear button to close pane
   $("#clearButton").on("click", function (e) {
     //pane.html("Loading");
-    if (identifiedFeature) {
-      map.removeLayer(identifiedFeature);
-    }
+    $(".leaflet-interactive").remove();
     tableElems.forEach(function (element) {
       $(element).html("No Data");
     });
@@ -267,10 +265,8 @@ function goToFeature(
   //clear the selected feature on the map and reset the selected features pane
   console.log("latlng", e.latlng);
   console.log("identified feature", identifiedFeature);
+  $(".leaflet-interactive").remove();
 
-  if (identifiedFeature) {
-    map.removeLayer(identifiedFeature);
-  }
   tableElems.forEach(function (element) {
     $(element).html("No Data");
   });
