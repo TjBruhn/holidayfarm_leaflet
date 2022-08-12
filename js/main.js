@@ -37,11 +37,22 @@ function createMap() {
   // });
 
   //add the layers
-  var parcels = addParcelLayer(map);
-  var sales = addSalesLayer(map);
-  var rebuild = addRebuildLayer(map);
-  var damage = addAssessDamageLayer(map);
-  var address = addAddressLayer(map);
+  var parcels = addParcelLayer();
+  var sales = addSalesLayer();
+  var rebuild = addRebuildLayer();
+  var damage = addAssessDamageLayer();
+  var address = addAddressLayer();
+
+  //variables needed for goToFeature
+  var identifiedFeature;
+  const tableElems = [
+    "#maplot",
+    "#address",
+    "#rebuild",
+    "#tempHousing",
+    "#sales",
+    "#damage",
+  ];
 
   //create the map
   var map = L.map("map", {
@@ -55,6 +66,57 @@ function createMap() {
   //addZoomhome
   var zoomHome = L.Control.zoomHome();
   zoomHome.addTo(map);
+
+  //add search control
+  var addrSearch = L.esri.Geocoding.mapServiceProvider({
+    url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer",
+    layers: [0],
+    searchFields: ["House Number", "Concatenated Full Address"], // Search these fields for text matches
+    label: "House number or address", // Group suggestions under this header
+    formatSuggestion: function (feature) {
+      return (
+        feature.properties["House Number"] +
+        " - " +
+        feature.properties["Concatenated Full Address"]
+      ); // format suggestions like this.
+    },
+    bufferRadius: 100,
+  });
+
+  var taxlotSearch = L.esri.Geocoding.mapServiceProvider({
+    url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/Parcels/MapServer",
+    layers: [0],
+    searchFields: ["maptaxlot", "maptaxlot_hyphen"], // Search these fields for text matches
+    label: "Maptaxlot", // Group suggestions under this header
+    formatSuggestion: function (feature) {
+      return (
+        feature.properties["maptaxlot"] +
+        " - " +
+        feature.properties["maptaxlot_hyphen"]
+      ); // format suggestions like this.
+    },
+    bufferRadius: 1,
+  });
+
+  var searchControl = L.esri.Geocoding.geosearch({
+    providers: [addrSearch, taxlotSearch], // will geocode via addressParcel Mapserver.
+    placeholder: "house number, address, or maptaxlot",
+  }).addTo(map);
+
+  searchControl.on("results", function (e) {
+    console.log("results", e.results);
+    goToFeature(
+      e,
+      identifiedFeature,
+      tableElems,
+      map,
+      parcels,
+      address,
+      rebuild,
+      sales,
+      damage
+    );
+  });
 
   //add address labels
   addAddrLabels(map);
@@ -81,127 +143,18 @@ function createMap() {
     .addTo(map);
 
   //==== create event listener to send data to panel on click ====
-  let identifiedFeature;
-
-  let tableElems = [
-    "#maplot",
-    "#address",
-    "#rebuild",
-    "#tempHousing",
-    "#sales",
-    "#damage",
-  ];
-
   map.on("click", function (e) {
-    //clear the selected feature on the map and reset the selected features pane
-    if (identifiedFeature) {
-      map.removeLayer(identifiedFeature);
-      tableElems.forEach(function (element) {
-        $(element).html("No Data");
-      });
-    }
-
-    //identify the feature clicked in parcels
-    parcels
-      .identify()
-      .layers("all:0") // just the counties sublayer
-      .on(map)
-      .at(e.latlng)
-      .run(function (error, featureCollection) {
-        if (error) {
-          return;
-        }
-
-        // make sure at least one feature was identified.
-        if (featureCollection.features.length > 0) {
-          identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(
-            map
-          );
-          //open pane zoom to feature
-          activatePane(map, identifiedFeature);
-
-          //write all intersecting maplot #s to pane
-          var maplot = featureCollection.features[0].properties.maptaxlot;
-          $("#maplot").html(maplot);
-          //get geometry to search intersecting address points
-          var maplotBounds = featureCollection.features[0].geometry;
-
-          //pull address if one or more is within this feature
-          address
-            .identify()
-            .layers("all:0")
-            .on(map)
-            .at(maplotBounds)
-            .run(function (error, featureCollection) {
-              if (error) {
-                return;
-              }
-              // make sure at least one feature was identified.
-              if (featureCollection.features.length > 0) {
-                //write all intersecting addresses to pane
-                multiAddr(featureCollection);
-              }
-            });
-        }
-      });
-    //identify the feature clicked in rebuild
-    rebuild
-      .identify()
-      .layers(1) // just the parcels sublayer
-      .on(map)
-      .at(e.latlng)
-      .run(function (error, featureCollection) {
-        if (error) {
-          return;
-        }
-        // make sure at least one feature was identified.
-        if (featureCollection.features.length > 0) {
-          //write all intersected rebuild status to pane
-          var rebuildStatus =
-            featureCollection.features[0].properties.RebuildStatus;
-          $("#rebuild").html(rebuildStatus);
-          //write all intersected temp housing status to pane
-          var tempHousing =
-            featureCollection.features[0].properties.TempHousing;
-          $("#tempHousing").html(tempHousing);
-        }
-      });
-
-    //identify the feature clicked in sales
-    sales
-      .identify()
-      .layers(0)
-      .on(map)
-      .at(e.latlng)
-      .run(function (error, featureCollection) {
-        if (error) {
-          return;
-        }
-        // make sure at least one feature was identified.
-        if (featureCollection.features.length > 0) {
-          //write all intersected sales dates to pane
-          var sales =
-            featureCollection.features[0].properties.deed_transfer_date;
-          $("#sales").html(sales);
-        }
-      });
-
-    //identify the feature clicked in damage
-    damage
-      .identify()
-      .layers("3") //only the structure damage layer
-      .on(map)
-      .at(e.latlng)
-      .run(function (error, featureCollection) {
-        if (error) {
-          return;
-        }
-        // make sure at least one feature was identified.
-        if (featureCollection.features.length > 0) {
-          //write all intersected damage status to pane
-          $("#damage").html("Yes");
-        }
-      });
+    return (identifiedFeature = goToFeature(
+      e,
+      identifiedFeature,
+      tableElems,
+      map,
+      parcels,
+      address,
+      rebuild,
+      sales,
+      damage
+    ));
   }); //XXX END map.on
 
   //add event listener to clear button to close pane
@@ -209,10 +162,10 @@ function createMap() {
     //pane.html("Loading");
     if (identifiedFeature) {
       map.removeLayer(identifiedFeature);
-      tableElems.forEach(function (element) {
-        $(element).html("No Data");
-      });
     }
+    tableElems.forEach(function (element) {
+      $(element).html("No Data");
+    });
     $("#map").css({ width: "100%", "border-radius": "0 0 1em 1em" });
     $("#selectedFeatures").css("display", "none");
     map.invalidateSize();
@@ -229,21 +182,21 @@ function createMap() {
 //==== create dynamic map layers ====
 
 // add Parcel layer
-function addParcelLayer(map) {
+function addParcelLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/Parcels/MapServer",
   });
 }
 
 // add sales layer
-function addSalesLayer(map) {
+function addSalesLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/HFFAreaSales/MapServer",
   });
 }
 
 // add rebuild status layer
-function addRebuildLayer(map) {
+function addRebuildLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/ParcelsRebuildStatus/MapServer",
     opacity: 0.5,
@@ -251,7 +204,7 @@ function addRebuildLayer(map) {
 }
 
 // add assessed damaged layer
-function addAssessDamageLayer(map) {
+function addAssessDamageLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/RightOfEntry/MapServer",
     layers: [3],
@@ -260,7 +213,7 @@ function addAssessDamageLayer(map) {
 }
 
 // add address point layer
-function addAddressLayer(map) {
+function addAddressLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer",
     layers: [0, 3], //0=address points 3=building footprint
@@ -298,6 +251,129 @@ function activatePane(map, identifiedFeature) {
   //center of selected feature
   map.flyToBounds(identifiedFeature.getBounds());
 }
+
+function goToFeature(
+  e,
+  identifiedFeature,
+  tableElems,
+  map,
+  parcels,
+  address,
+  rebuild,
+  sales,
+  damage
+) {
+  //e=event
+  //clear the selected feature on the map and reset the selected features pane
+  console.log("latlng", e.latlng);
+  console.log("identified feature", identifiedFeature);
+
+  if (identifiedFeature) {
+    map.removeLayer(identifiedFeature);
+  }
+  tableElems.forEach(function (element) {
+    $(element).html("No Data");
+  });
+
+  //identify the feature clicked in parcels
+  parcels
+    .identify()
+    .layers("all:0") // just the counties sublayer
+    .on(map)
+    .at(e.latlng)
+    .run(function (error, featureCollection) {
+      if (error) {
+        return;
+      }
+
+      // make sure at least one feature was identified.
+      if (featureCollection.features.length > 0) {
+        identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(map);
+        //open pane zoom to feature
+        activatePane(map, identifiedFeature);
+
+        //write all intersecting maplot #s to pane
+        var maplot = featureCollection.features[0].properties.maptaxlot;
+        $("#maplot").html(maplot);
+        //get geometry to search intersecting address points
+        var maplotBounds = featureCollection.features[0].geometry;
+
+        //pull address if one or more is within this feature
+        address
+          .identify()
+          .layers("all:0")
+          .on(map)
+          .at(maplotBounds)
+          .run(function (error, featureCollection) {
+            if (error) {
+              return;
+            }
+            // make sure at least one feature was identified.
+            if (featureCollection.features.length > 0) {
+              //write all intersecting addresses to pane
+              multiAddr(featureCollection);
+            }
+          });
+      }
+    });
+  //identify the feature clicked in rebuild
+  rebuild
+    .identify()
+    .layers(1) // just the parcels sublayer
+    .on(map)
+    .at(e.latlng)
+    .run(function (error, featureCollection) {
+      if (error) {
+        return;
+      }
+      // make sure at least one feature was identified.
+      if (featureCollection.features.length > 0) {
+        //write all intersected rebuild status to pane
+        var rebuildStatus =
+          featureCollection.features[0].properties.RebuildStatus;
+        $("#rebuild").html(rebuildStatus);
+        //write all intersected temp housing status to pane
+        var tempHousing = featureCollection.features[0].properties.TempHousing;
+        $("#tempHousing").html(tempHousing);
+      }
+    });
+
+  //identify the feature clicked in sales
+  sales
+    .identify()
+    .layers(0)
+    .on(map)
+    .at(e.latlng)
+    .run(function (error, featureCollection) {
+      if (error) {
+        return;
+      }
+      // make sure at least one feature was identified.
+      if (featureCollection.features.length > 0) {
+        //write all intersected sales dates to pane
+        var sales = featureCollection.features[0].properties.deed_transfer_date;
+        $("#sales").html(sales);
+      }
+    });
+
+  //identify the feature clicked in damage
+  damage
+    .identify()
+    .layers("3") //only the structure damage layer
+    .on(map)
+    .at(e.latlng)
+    .run(function (error, featureCollection) {
+      if (error) {
+        return;
+      }
+      // make sure at least one feature was identified.
+      if (featureCollection.features.length > 0) {
+        //write all intersected damage status to pane
+        $("#damage").html("Yes");
+      }
+    });
+  return identifiedFeature;
+} //XXX END goToFeature
 
 //deal with multiple addresses on one parcel used in map.on-click
 function multiAddr(featureCollection) {
