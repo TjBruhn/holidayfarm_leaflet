@@ -101,21 +101,14 @@ function createMap() {
   var searchControl = L.esri.Geocoding.geosearch({
     providers: [addrSearch, taxlotSearch], // will geocode via addressParcel Mapserver.
     placeholder: "house number, address, or maptaxlot",
+    zoomToResult: false,
   }).addTo(map);
 
   searchControl.on("results", function (e) {
-    console.log("results", e.results);
-    goToFeature(
-      e,
-      identifiedFeature,
-      tableElems,
-      map,
-      parcels,
-      address,
-      rebuild,
-      sales,
-      damage
-    );
+    console.log("results-props: ", e.results[0].geojson);
+    console.log("results: ", e.latlng);
+    //map.flyTo(e.latlng, 19);
+    goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
   });
 
   //add address labels
@@ -146,7 +139,6 @@ function createMap() {
   map.on("click", function (e) {
     return (identifiedFeature = goToFeature(
       e,
-      identifiedFeature,
       tableElems,
       map,
       parcels,
@@ -224,7 +216,7 @@ function addAddrLabels(map) {
     .featureLayer({
       url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer/0",
       where:
-        "five_digit_zip_code='97488' OR five_digit_zip_code='97478'OR five_digit_zip_code='97413'",
+        "five_digit_zip_code='97489' OR five_digit_zip_code='97488' OR five_digit_zip_code='97478'OR five_digit_zip_code='97413'",
       minZoom: 16,
       pointToLayer: function (geojson, latlng) {
         return L.marker(latlng, {
@@ -250,9 +242,8 @@ function activatePane(map, identifiedFeature) {
   map.flyToBounds(identifiedFeature.getBounds());
 }
 
-function goToFeature(
+function goToFeature( //e=event
   e,
-  identifiedFeature,
   tableElems,
   map,
   parcels,
@@ -261,17 +252,15 @@ function goToFeature(
   sales,
   damage
 ) {
-  //e=event
-  //clear the selected feature on the map and reset the selected features pane
-  console.log("latlng", e.latlng);
-  console.log("identified feature", identifiedFeature);
+  //clear the selected feature on the map
   $(".leaflet-interactive").remove();
 
+  // and reset the selected features pane
   tableElems.forEach(function (element) {
-    $(element).html("No Data");
+    $(element).html("Loading Data");
   });
 
-  //identify the feature clicked in parcels
+  //identify the feature clicked/searched in parcels
   parcels
     .identify()
     .layers("all:0") // just the counties sublayer
@@ -279,12 +268,15 @@ function goToFeature(
     .at(e.latlng)
     .run(function (error, featureCollection) {
       if (error) {
+        console.log("error", error);
         return;
       }
 
       // make sure at least one feature was identified.
       if (featureCollection.features.length > 0) {
-        identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(map);
+        let identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(
+          map
+        );
         //open pane zoom to feature
         activatePane(map, identifiedFeature);
 
@@ -293,6 +285,7 @@ function goToFeature(
         $("#maplot").html(maplot);
         //get geometry to search intersecting address points
         var maplotBounds = featureCollection.features[0].geometry;
+        console.log("selected feature geom: ", maplotBounds);
 
         //pull address if one or more is within this feature
         address
@@ -300,14 +293,18 @@ function goToFeature(
           .layers("all:0")
           .on(map)
           .at(maplotBounds)
+          .layerDef(0, "maptaxlot='" + maplot + "'")
           .run(function (error, featureCollection) {
             if (error) {
+              console.log("error", error);
               return;
             }
             // make sure at least one feature was identified.
             if (featureCollection.features.length > 0) {
               //write all intersecting addresses to pane
               multiAddr(featureCollection);
+            } else {
+              $("#address").html("No Data");
             }
           });
       }
@@ -320,6 +317,7 @@ function goToFeature(
     .at(e.latlng)
     .run(function (error, featureCollection) {
       if (error) {
+        console.log("error", error);
         return;
       }
       // make sure at least one feature was identified.
@@ -331,6 +329,9 @@ function goToFeature(
         //write all intersected temp housing status to pane
         var tempHousing = featureCollection.features[0].properties.TempHousing;
         $("#tempHousing").html(tempHousing);
+      } else {
+        $("#rebuild").html("No Data");
+        $("#tempHousing").html("No Data");
       }
     });
 
@@ -342,6 +343,7 @@ function goToFeature(
     .at(e.latlng)
     .run(function (error, featureCollection) {
       if (error) {
+        console.log("error", error);
         return;
       }
       // make sure at least one feature was identified.
@@ -349,6 +351,8 @@ function goToFeature(
         //write all intersected sales dates to pane
         var sales = featureCollection.features[0].properties.deed_transfer_date;
         $("#sales").html(sales);
+      } else {
+        $("#sales").html("No Data");
       }
     });
 
@@ -360,15 +364,17 @@ function goToFeature(
     .at(e.latlng)
     .run(function (error, featureCollection) {
       if (error) {
+        console.log("error", error);
         return;
       }
       // make sure at least one feature was identified.
       if (featureCollection.features.length > 0) {
         //write all intersected damage status to pane
         $("#damage").html("Yes");
+      } else {
+        $("#damage").html("No Data");
       }
     });
-  return identifiedFeature;
 } //XXX END goToFeature
 
 //deal with multiple addresses on one parcel used in map.on-click
@@ -425,7 +431,7 @@ function countFeatures(map, rebuild, sales) {
         .intersects(map.getBounds())
         .count(function (error, count) {
           if (error) {
-            console.log(error);
+            console.log("error", error);
           } else {
             $("#" + statusItem).html(count);
           }
@@ -441,7 +447,7 @@ function countFeatures(map, rebuild, sales) {
       .intersects(map.getBounds())
       .count(function (error, count) {
         if (error) {
-          console.log(error);
+          console.log("error", error);
         } else {
           $("#sold").html(count);
         }
@@ -454,7 +460,7 @@ function countFeatures(map, rebuild, sales) {
       .intersects(map.getBounds())
       .count(function (error, count) {
         if (error) {
-          console.log(error);
+          console.log("error", error);
         } else {
           $("#tempHouse").html(count);
         }
