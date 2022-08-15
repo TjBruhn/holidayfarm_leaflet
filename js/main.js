@@ -93,13 +93,10 @@ function createMap() {
   }).addTo(map);
 
   searchControl.on("results", function (e) {
-    //debug tests
-    pinPoint(e.latlng, map);
-    console.log("results-props: ", e.results[0].geojson);
-    console.log("search results: ", e.latlng);
-    //XXXEnd debug tests
-
-    goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
+    map.flyTo(e.latlng, 15);
+    map.once("moveend zoomend", function () {
+      goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
+    });
   });
 
   //add address labels
