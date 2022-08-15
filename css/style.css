@@ -122,6 +122,7 @@ td {
   width: 100%;
   font-size: x-large;
 }
+
 .countBox {
   flex: 1 1 0;
 }
@@ -136,23 +137,35 @@ td {
   outline-offset: -0.15em;
 }
 
-.ns {
+.head.ns {
+  background-color: rgb(255, 170, 0);
+}
+.count.ns {
   background-color: rgba(255, 170, 0, 0.5);
 }
 
-.ip {
+.head.ip {
+  background-color: rgb(115, 178, 255);
+}
+.count.ip {
   background-color: rgba(115, 178, 255, 0.5);
 }
 
-.ss {
+.head.ss {
+  background-color: rgb(0, 168, 132);
+}
+.count.ss {
   background-color: rgba(0, 168, 132, 0.5);
 }
 
-.as {
+.head.as {
+  background-color: rgb(76, 230, 0);
+}
+.count.as {
   background-color: rgba(76, 230, 0, 0.5);
 }
 
-.sd:not(#sold) {
+.head.sd {
   background-color: #bc3df2;
 }
 

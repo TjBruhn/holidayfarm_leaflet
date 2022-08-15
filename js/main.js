@@ -17,24 +17,6 @@ function createMap() {
         '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
     }
   );
-  // var mbAttr =
-  //   'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
-  // copied url from tutorial probably don't use
-  // var mbUrl =
-  //   "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw";
-
-  // var streets = L.tileLayer(mbUrl, {
-  //   id: "mapbox/streets-v11",
-  //   tileSize: 512,
-  //   zoomOffset: -1,
-  //   attribution: mbAttr,
-  // });
-  // var satellite = L.tileLayer(mbUrl, {
-  //   id: "mapbox/satellite-v9",
-  //   tileSize: 512,
-  //   zoomOffset: -1,
-  //   attribution: mbAttr,
-  // });
 
   //add the layers
   var parcels = addParcelLayer();
@@ -43,8 +25,7 @@ function createMap() {
   var damage = addAssessDamageLayer();
   var address = addAddressLayer();
 
-  //variables needed for goToFeature
-  var identifiedFeature;
+  //variables needed for goToFeature function
   const tableElems = [
     "#maplot",
     "#address",
@@ -53,6 +34,11 @@ function createMap() {
     "#sales",
     "#damage",
   ];
+
+  //set an extent within which to constrain searches this is the original extent of the map frame at load
+  const northEast = L.latLng(44.222813960308336, -122.1889114379883);
+  const southWest = L.latLng(44.07722688523791, -122.7107620239258);
+  const searchBounds = L.latLngBounds(northEast, southWest);
 
   //create the map
   var map = L.map("map", {
@@ -74,13 +60,14 @@ function createMap() {
     searchFields: ["House Number", "Concatenated Full Address"], // Search these fields for text matches
     label: "House number or address", // Group suggestions under this header
     formatSuggestion: function (feature) {
+      // format suggestions like this.
       return (
         feature.properties["House Number"] +
         " - " +
         feature.properties["Concatenated Full Address"]
-      ); // format suggestions like this.
+      );
     },
-    bufferRadius: 100,
+    bufferRadius: 1,
   });
 
   var taxlotSearch = L.esri.Geocoding.mapServiceProvider({
@@ -89,25 +76,29 @@ function createMap() {
     searchFields: ["maptaxlot", "maptaxlot_hyphen"], // Search these fields for text matches
     label: "Maptaxlot", // Group suggestions under this header
     formatSuggestion: function (feature) {
+      // format suggestions like this.
       return (
         feature.properties["maptaxlot"] +
         " - " +
         feature.properties["maptaxlot_hyphen"]
-      ); // format suggestions like this.
+      );
     },
-    bufferRadius: 1,
   });
 
   var searchControl = L.esri.Geocoding.geosearch({
     providers: [addrSearch, taxlotSearch], // will geocode via addressParcel Mapserver.
     placeholder: "house number, address, or maptaxlot",
     zoomToResult: false,
+    searchBounds: searchBounds,
   }).addTo(map);
 
   searchControl.on("results", function (e) {
+    //debug tests
+    pinPoint(e.latlng, map);
     console.log("results-props: ", e.results[0].geojson);
-    console.log("results: ", e.latlng);
-    //map.flyTo(e.latlng, 19);
+    console.log("search results: ", e.latlng);
+    //XXXEnd debug tests
+
     goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
   });
 
@@ -137,27 +128,22 @@ function createMap() {
 
   //==== create event listener to send data to panel on click ====
   map.on("click", function (e) {
-    return (identifiedFeature = goToFeature(
-      e,
-      tableElems,
-      map,
-      parcels,
-      address,
-      rebuild,
-      sales,
-      damage
-    ));
-  }); //XXX END map.on
+    goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
+  });
 
   //add event listener to clear button to close pane
   $("#clearButton").on("click", function (e) {
-    //pane.html("Loading");
-    $(".leaflet-interactive").remove();
+    //remove the selection polygon
+    $("g .leaflet-interactive").remove();
+    //clear the panel
     tableElems.forEach(function (element) {
       $(element).html("No Data");
     });
+    //return map to full width
     $("#map").css({ width: "100%", "border-radius": "0 0 1em 1em" });
+    //hide display
     $("#selectedFeatures").css("display", "none");
+    //reset map size to allow for new center
     map.invalidateSize();
   });
 
@@ -197,7 +183,7 @@ function addRebuildLayer() {
 function addAssessDamageLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/McKenzieRebuild/RightOfEntry/MapServer",
-    layers: [3],
+    layers: [3], //only the parcels with damage layer
     opacity: 1,
   });
 }
@@ -206,7 +192,7 @@ function addAssessDamageLayer() {
 function addAddressLayer() {
   return L.esri.dynamicMapLayer({
     url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer",
-    layers: [0, 3], //0=address points 3=building footprint
+    layers: [0, 3], //0=address points 3=building footprints
   });
 }
 
@@ -234,12 +220,19 @@ function addAddrLabels(map) {
 //==== other functions ====
 //make map and pane dynamic used in map.on-click
 function activatePane(map, identifiedFeature) {
+  //shrink map to allow panel to fit
   $("#map").css({ width: "65%", "border-radius": "0 0 0 1em" });
+  //allow for map center to be based on new map frame
   map.invalidateSize();
+  //display the panel
   $("#selectedFeatures").css("display", "flex");
-
-  //center of selected feature
+  //center map on selected feature
   map.flyToBounds(identifiedFeature.getBounds());
+}
+
+//drop pin at search point TEMPRORARY FOR DEBUG
+function pinPoint(latlng, map) {
+  L.marker(latlng).addTo(map);
 }
 
 function goToFeature( //e=event
@@ -253,7 +246,7 @@ function goToFeature( //e=event
   damage
 ) {
   //clear the selected feature on the map
-  $(".leaflet-interactive").remove();
+  $("g .leaflet-interactive").remove();
 
   // and reset the selected features pane
   tableElems.forEach(function (element) {
@@ -274,10 +267,13 @@ function goToFeature( //e=event
 
       // make sure at least one feature was identified.
       if (featureCollection.features.length > 0) {
+        //for debug
+        console.log("parcel e.latlng", e.latlng);
+        //add a feature to highlight the selected feature
         let identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(
           map
         );
-        //open pane zoom to feature
+        //open pane and zoom to feature
         activatePane(map, identifiedFeature);
 
         //write all intersecting maplot #s to pane
@@ -285,7 +281,8 @@ function goToFeature( //e=event
         $("#maplot").html(maplot);
         //get geometry to search intersecting address points
         var maplotBounds = featureCollection.features[0].geometry;
-        console.log("selected feature geom: ", maplotBounds);
+        //Debug
+        console.log("selected feature geom: ", maplotBounds.coordinates);
 
         //pull address if one or more is within this feature
         address
@@ -383,7 +380,7 @@ function multiAddr(featureCollection) {
   //clear address field
   $("#address").html("");
 
-  //set array for determining unique
+  //set array for determining unique addresses
   var houseNmbr = [];
   //iterate through all available addresses
   for (let i = 0; i < featureCollection.features.length; i++) {
@@ -453,6 +450,7 @@ function countFeatures(map, rebuild, sales) {
         }
       });
 
+    //count temporary housing in view
     rebuild
       .query()
       .layer(0)
@@ -470,8 +468,17 @@ function countFeatures(map, rebuild, sales) {
 
 //applyfilters when counter box is clicked
 function filter(map, rebuild, sales, filtered) {
-  $(".countBox.count").on("click ", function (event) {
-    //hide everything but this also dispalys everything on second click
+  //add tool tip to help inform that these are filter buttons
+  $(".countBox.count")
+    .on("mouseenter", function () {
+      $(this).css("cursor", "pointer").attr("title", "click to filter");
+    })
+    .on("mouseleave", function () {
+      $(this).css("cursor", "auto");
+    });
+
+  //hide everything on first click also displays everything on second click
+  $(".countBox.count").on("click", function (event) {
     var allElse = ".countBox:not(." + this.classList[2] + ")";
     $(allElse).toggle();
 
