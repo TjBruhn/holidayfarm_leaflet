@@ -93,7 +93,7 @@ function createMap() {
   }).addTo(map);
 
   searchControl.on("results", function (e) {
-    map.flyTo(e.latlng, 15);
+    map.flyTo(e.latlng, 16);
     map.once("moveend zoomend", function () {
       goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
     });
