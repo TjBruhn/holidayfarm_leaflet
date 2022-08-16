@@ -25,6 +25,7 @@ function createMap() {
   var rebuild = addRebuildLayer();
   var damage = addAssessDamageLayer();
   var address = addAddressLayer();
+  var burnBoundary = addBurnBoundary();
 
   //variables needed for goToFeature function
   const tableElems = [
@@ -47,7 +48,7 @@ function createMap() {
     zoomControl: false,
     zoom: 12,
     minZoom: 11,
-    layers: [osm, parcels, rebuild, sales, address], //these will be loaded with the map
+    layers: [osm, parcels, rebuild, sales, address, burnBoundary], //these will be loaded with the map
   });
 
   //addZoomhome
@@ -95,6 +96,10 @@ function createMap() {
 
   //use search results to goToFeature zooming to feature and activating panel
   searchControl.on("results", function (e) {
+    // and reset the selected features pane
+    tableElems.forEach(function (element) {
+      $(element).html("Loading Data");
+    });
     //move the map view to the searched feature
     map.flyTo(e.latlng, 16);
     //after the map view is over the feature zoom to and activate panel
@@ -118,8 +123,9 @@ function createMap() {
     Parcels: parcels,
     Sales: sales,
     "Rebuild Status": rebuild,
-    "Structure Damage": damage,
     Address: address,
+    "Burn Boundary": burnBoundary,
+    "Structure Damage": damage,
   };
 
   //create layer control
@@ -227,6 +233,12 @@ function addAddrLabels(map) {
       },
     })
     .addTo(map);
+}
+
+function addBurnBoundary() {
+  return L.esri.featureLayer({
+    url: "https://services5.arcgis.com/9s1YtFmLS0YTl10F/arcgis/rest/services/Holiday_Farm_Fire_Boundary/FeatureServer/0",
+  });
 }
 
 //==== other functions ====
