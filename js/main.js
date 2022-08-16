@@ -1,5 +1,5 @@
 // javascript by Trever J. Bruhn 2022
-console.log("Branch: add search");
+console.log("Branch: add search sub switch_grid");
 //function to instantiate leaflet map
 function createMap() {
   //==== define basemaps to be used in the map ====
