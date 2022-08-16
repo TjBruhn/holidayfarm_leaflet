@@ -8,16 +8,7 @@ function createMap() {
     attribution:
       '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
   });
-
-  var Stadia_AlidadeSmooth = L.tileLayer(
-    "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
-    {
-      maxZoom: 20,
-      attribution:
-        '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-    }
-  );
-
+  //add a grey base tile layer
   var CartoDB_Positron = L.tileLayer(
     "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
     {
@@ -102,8 +93,11 @@ function createMap() {
     searchBounds: searchBounds,
   }).addTo(map);
 
+  //use search results to goToFeature zooming to feature and activating panel
   searchControl.on("results", function (e) {
+    //move the map view to the searched feature
     map.flyTo(e.latlng, 16);
+    //after the map view is over the feature zoom to and activate panel
     map.once("moveend zoomend", function () {
       goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
     });
@@ -117,7 +111,6 @@ function createMap() {
   var baseMaps = {
     OpenStreetMap: osm,
     Grey: CartoDB_Positron,
-    "Light Grey": Stadia_AlidadeSmooth,
   };
 
   //create overlayers object to be passed to layercontrol
@@ -134,7 +127,9 @@ function createMap() {
     .layers(baseMaps, overlayers, { autoZIndex: "false" })
     .addTo(map);
 
-  //==== create event listener to send data to panel on click ====
+  //===== create event listeners  =====
+
+  //create event listener to send data to panel on click
   map.on("click", function (e) {
     goToFeature(e, tableElems, map, parcels, address, rebuild, sales, damage);
   });
@@ -155,13 +150,22 @@ function createMap() {
     map.invalidateSize();
   });
 
-  //===== event listeners to produce counts =====
+  //add event listener to produce counts
   countFeatures(map, rebuild, sales);
 
   //add filter filtered is used to determine whether to filter or restore the map
   var filtered = false;
+  //filter map if one of the count bozes is clicked
   filter(map, rebuild, sales, filtered);
-} //XXX END createMap
+
+  //========test itemes to be deleted ==========
+  map.on("zoomend", () => console.log("zoom", map.getZoom()));
+
+  map.on("moveend", () => console.log("address style", address.getLayerDefs()));
+}
+//XXX
+// ===========END createMap ===========
+//XXX
 
 //==== create dynamic map layers ====
 
@@ -211,7 +215,7 @@ function addAddrLabels(map) {
       url: "https://lcmaps.lanecounty.org/arcgis/rest/services/LaneCountyMaps/AddressParcel/MapServer/0",
       where:
         "five_digit_zip_code='97489' OR five_digit_zip_code='97488' OR five_digit_zip_code='97478'OR five_digit_zip_code='97413'",
-      minZoom: 16,
+      minZoom: 17,
       pointToLayer: function (geojson, latlng) {
         return L.marker(latlng, {
           icon: L.divIcon({
@@ -236,11 +240,6 @@ function activatePane(map, identifiedFeature) {
   $("#selectedFeatures").css("display", "flex");
   //center map on selected feature
   map.flyToBounds(identifiedFeature.getBounds());
-}
-
-//drop pin at search point TEMPRORARY FOR DEBUG
-function pinPoint(latlng, map) {
-  L.marker(latlng).addTo(map);
 }
 
 function goToFeature( //e=event
@@ -275,8 +274,6 @@ function goToFeature( //e=event
 
       // make sure at least one feature was identified.
       if (featureCollection.features.length > 0) {
-        //for debug
-        console.log("parcel e.latlng", e.latlng);
         //add a feature to highlight the selected feature
         let identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(
           map
@@ -287,6 +284,10 @@ function goToFeature( //e=event
         //write all intersecting maplot #s to pane
         var maplot = featureCollection.features[0].properties.maptaxlot;
         $("#maplot").html(maplot);
+
+        var rlid_link = featureCollection.features[0].properties.rlid_link;
+        $("#rlid_link a").attr("href", rlid_link);
+
         //get geometry to search intersecting address points
         var maplotBounds = featureCollection.features[0].geometry;
         //Debug

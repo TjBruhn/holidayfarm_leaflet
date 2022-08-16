@@ -49,6 +49,14 @@ body {
   border-radius: 0 0 1em 1em;
 }
 
+.label {
+  color: darkslategrey;
+  font-size: smaller;
+  /* add halo effect */
+  text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white,
+    0.2em 0 0.1em white, -0.2em 0 0.1em white;
+}
+
 /* 
 ==========info pane ==========
 */
