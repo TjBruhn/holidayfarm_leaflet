@@ -1,5 +1,5 @@
 // javascript by Trever J. Bruhn 2022
-console.log("Branch: add search sub switch_grid");
+console.log("Branch: add search");
 //function to instantiate leaflet map
 function createMap() {
   //==== define basemaps to be used in the map ====
@@ -175,10 +175,6 @@ function createMap() {
   var filtered = false;
   //filter map if one of the count bozes is clicked
   filter(map, rebuild, sales, filtered);
-
-  //========test itemes to be deleted ==========
-
-  map.on("click", (e) => console.log("event", e));
 }
 //XXX
 // ===========END createMap ===========
@@ -321,8 +317,6 @@ function goToFeature( //e=event
 
         //get geometry to search intersecting address points
         var maplotBounds = featureCollection.features[0].geometry;
-        //Debug
-        console.log("selected feature geom: ", maplotBounds.coordinates);
 
         //pull address if one or more is within this feature
         address
@@ -517,8 +511,8 @@ function filter(map, rebuild, sales, filtered) {
       $(this).css("cursor", "auto");
     });
 
-  //hide everything on first click also displays everything on second click
   $(".countBox.count").on("click", function (event) {
+    //hide everything on first click also displays everything on second click
     var allElse = ".countBox:not(." + this.classList[2] + ")";
     $(allElse).toggle();
 
@@ -530,6 +524,8 @@ function filter(map, rebuild, sales, filtered) {
       "PermComplete",
     ];
     if (filtered) {
+      //return this to one column wide
+      $("." + this.classList[2]).css("grid-column", "span 1");
       //if currently filtered change filtered and restore all layers
       filtered = false;
       map.addLayer(sales);
@@ -540,6 +536,8 @@ function filter(map, rebuild, sales, filtered) {
         1: "OBJECTID>0",
       });
     } else {
+      //expand this across all columns
+      $("." + this.classList[2]).css("grid-column", "span 6");
       //if not currently filtered change filtered and filter layers
       filtered = true;
       //apply filters

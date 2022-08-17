@@ -6,6 +6,7 @@ body {
   background-color: rgb(215, 217, 223);
   background-position: center;
   font-family: "Montserrat", sans-serif;
+  color: darkslategrey;
 }
 
 .button {
@@ -130,7 +131,7 @@ td {
 #counter {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: 30% 70%;
+  grid-template-rows: minmax(3fr, auto) 7fr;
   text-align: center;
   font-weight: bolder;
   color: white;
