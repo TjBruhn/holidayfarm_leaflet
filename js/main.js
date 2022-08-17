@@ -46,7 +46,7 @@ function createMap() {
   var map = L.map("map", {
     center: [44.15, -122.45],
     zoomControl: false,
-    zoom: 12,
+    zoom: 11,
     minZoom: 11,
     layers: [osm, parcels, rebuild, sales, address, burnBoundary], //these will be loaded with the map
   });
@@ -111,6 +111,18 @@ function createMap() {
   //add address labels
   addAddrLabels(map);
 
+  //add label to burn boundary
+  L.marker([44.21564108484721, -122.5627899169922], {
+    keyboard: false, //prevent keyboard tab to
+    icon: L.divIcon({
+      iconSize: null,
+      className: "burnBound",
+      html: "Holiday Farm Fire Burn Boundary",
+    }),
+  }).addTo(map);
+
+  //[44.20864272559424, -122.50167846679689]
+
   //==== add in layer controls ====
   //create basemaps object to be passed to layercontrol
   var baseMaps = {
@@ -143,7 +155,7 @@ function createMap() {
   //add event listener to clear button to close pane
   $("#clearButton").on("click", function (e) {
     //remove the selection polygon
-    $("g .leaflet-interactive").remove();
+    $(".identifiedFeature").remove();
     //clear the panel
     tableElems.forEach(function (element) {
       $(element).html("No Data");
@@ -165,9 +177,8 @@ function createMap() {
   filter(map, rebuild, sales, filtered);
 
   //========test itemes to be deleted ==========
-  map.on("zoomend", () => console.log("zoom", map.getZoom()));
 
-  map.on("moveend", () => console.log("address style", address.getLayerDefs()));
+  map.on("click", (e) => console.log("event", e));
 }
 //XXX
 // ===========END createMap ===========
@@ -238,6 +249,10 @@ function addAddrLabels(map) {
 function addBurnBoundary() {
   return L.esri.featureLayer({
     url: "https://services5.arcgis.com/9s1YtFmLS0YTl10F/arcgis/rest/services/Holiday_Farm_Fire_Boundary/FeatureServer/0",
+    style: {
+      color: "#f55a42",
+      fill: false,
+    },
   });
 }
 
@@ -265,7 +280,7 @@ function goToFeature( //e=event
   damage
 ) {
   //clear the selected feature on the map
-  $("g .leaflet-interactive").remove();
+  $(".identifiedFeature").remove();
 
   // and reset the selected features pane
   tableElems.forEach(function (element) {
@@ -287,9 +302,13 @@ function goToFeature( //e=event
       // make sure at least one feature was identified.
       if (featureCollection.features.length > 0) {
         //add a feature to highlight the selected feature
-        let identifiedFeature = L.geoJSON(featureCollection.features[0]).addTo(
-          map
-        );
+        let identifiedFeature = L.geoJSON(featureCollection.features[0], {
+          style: {
+            color: "#f5f242",
+            fill: false,
+          },
+          className: "identifiedFeature",
+        }).addTo(map);
         //open pane and zoom to feature
         activatePane(map, identifiedFeature);
 

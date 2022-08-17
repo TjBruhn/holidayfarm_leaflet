@@ -57,6 +57,11 @@ body {
     0.2em 0 0.1em white, -0.2em 0 0.1em white;
 }
 
+.burnBound {
+  color: #f55a42;
+  width: 30em;
+}
+
 /* 
 ==========info pane ==========
 */
