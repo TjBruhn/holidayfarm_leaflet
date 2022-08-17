@@ -35,6 +35,7 @@ function createMap() {
     "#tempHousing",
     "#sales",
     "#damage",
+    "#rlid_link a",
   ];
 
   //set an extent within which to constrain searches this is the original extent of the map frame at load
@@ -314,6 +315,7 @@ function goToFeature( //e=event
 
         var rlid_link = featureCollection.features[0].properties.rlid_link;
         $("#rlid_link a").attr("href", rlid_link);
+        $("#rlid_link a").html("View on RLID");
 
         //get geometry to search intersecting address points
         var maplotBounds = featureCollection.features[0].geometry;
