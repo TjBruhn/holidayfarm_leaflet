@@ -6,6 +6,7 @@ body {
   background-color: rgb(215, 217, 223);
   background-position: center;
   font-family: "Montserrat", sans-serif;
+  color: darkslategrey;
 }
 
 .button {
@@ -23,17 +24,34 @@ body {
   flex-direction: row;
 }
 
+footer {
+  font-size: smaller;
+}
+
+footer a {
+  color: darkslategrey;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: rgb(55, 147, 147);
+  text-decoration: underline;
+}
+
 /*
   ========== Title ==========
   */
 #title {
   text-align: center;
   padding: 0.35em 0em 0.35em 0em; /*top/right/bot/left */
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: white;
+  /* rgba(255, 255, 255, 0.8); */
+  border-radius: 1em 1em 0 0;
 }
 #title h1 {
   margin: 0;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Lato", sans-serif;
+  word-spacing: 0.3em;
   color: darkslategrey;
 }
 
@@ -47,6 +65,19 @@ body {
   display: inline-block;
   font-family: "Montserrat", sans-serif;
   border-radius: 0 0 1em 1em;
+}
+
+.label {
+  color: darkslategrey;
+  font-size: smaller;
+  /* add halo effect */
+  text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white,
+    0.2em 0 0.1em white, -0.2em 0 0.1em white;
+}
+
+.burnBound {
+  color: #f55a42;
+  width: 30em;
 }
 
 /* 
@@ -98,32 +129,25 @@ td {
 ==========Counter panel ==========
 */
 #counter {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 4em;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: minmax(3fr, auto) 7fr;
   text-align: center;
   font-weight: bolder;
   color: white;
 }
-#headrow {
+.head {
   display: flex;
-  flex-direction: row;
-  height: 40%;
-  width: 100%;
+  justify-content: center;
+  align-items: center;
   font-size: small;
 }
 
-#countrow {
+.count {
   display: flex;
-  flex-direction: row;
-  height: 60%;
-  width: 100%;
+  justify-content: center;
+  align-items: center;
   font-size: x-large;
-}
-.countBox {
-  flex: 1 1 0;
 }
 
 .countBox:not(.ns) {
@@ -136,23 +160,35 @@ td {
   outline-offset: -0.15em;
 }
 
-.ns {
+.head.ns {
+  background-color: rgb(255, 170, 0);
+}
+.count.ns {
   background-color: rgba(255, 170, 0, 0.5);
 }
 
-.ip {
+.head.ip {
+  background-color: rgb(115, 178, 255);
+}
+.count.ip {
   background-color: rgba(115, 178, 255, 0.5);
 }
 
-.ss {
+.head.ss {
+  background-color: rgb(0, 168, 132);
+}
+.count.ss {
   background-color: rgba(0, 168, 132, 0.5);
 }
 
-.as {
+.head.as {
+  background-color: rgb(76, 230, 0);
+}
+.count.as {
   background-color: rgba(76, 230, 0, 0.5);
 }
 
-.sd:not(#sold) {
+.head.sd {
   background-color: #bc3df2;
 }
 
