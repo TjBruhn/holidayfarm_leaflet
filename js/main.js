@@ -255,7 +255,7 @@ function addBurnBoundary() {
 //make map and pane dynamic used in map.on-click
 function activatePane(map, identifiedFeature) {
   //shrink map to allow panel to fit
-  $("#map").css({ width: "65%", "border-radius": "0 0 0 1em" });
+  $("#map").css({ width: "66.666%", "border-radius": "0 0 0 1em" });
   //allow for map center to be based on new map frame
   map.invalidateSize();
   //display the panel
@@ -502,13 +502,21 @@ function countFeatures(map, rebuild, sales) {
 
 //applyfilters when counter box is clicked
 function filter(map, rebuild, sales, filtered) {
-  //add tool tip to help inform that these are filter buttons
+  //add tool tip to help inform that these are filter buttons and switch filterIcon transparency
   $(".countBox.count")
     .on("mouseenter", function () {
-      $(this).css("cursor", "pointer").attr("title", "click to filter");
+      if (filtered) {
+        $(this).css("cursor", "pointer").attr("title", "remove filter");
+      } else {
+        $(this).css("cursor", "pointer").attr("title", "click to filter");
+      }
+      //make icon filter not transparent
+      $("." + this.classList[2] + " .filterIcon").css("opacity", "1");
     })
     .on("mouseleave", function () {
       $(this).css("cursor", "auto");
+      //make icon filter transparent again
+      $("." + this.classList[2] + " .filterIcon").css("opacity", ".3");
     });
 
   $(".countBox.count").on("click", function (event) {

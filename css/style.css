@@ -113,9 +113,9 @@ td {
   padding: 0.75rem;
 }
 
-#address {
+/* #address {
   height: 5em;
-}
+} */
 
 #clearButtonDiv {
   margin: 1em;
@@ -192,7 +192,7 @@ td {
   background-color: #bc3df2;
 }
 
-#sold {
+.count.sd {
   background-image: radial-gradient(#bc3df2 20%, rgba(0, 0, 0, 0) 20%);
   background-position: 0 0;
   background-size: 12px 12px;
@@ -203,7 +203,7 @@ td {
   background-color: darkgray;
 }
 
-#tempHouse {
+.count.temp {
   /*make stripped lines*/
   background: repeating-linear-gradient(
     -45deg,
@@ -213,4 +213,15 @@ td {
     /*end at */ rgba(0, 0, 0, 0) 10px
   );
   text-shadow: 0.1em 0 0.4em black, -0.1em 0 0.4em black;
+}
+.filterIcon {
+  stroke: #ffffff;
+  fill: #ffffff;
+  opacity: 0.3;
+  flex: 1;
+}
+/* force centering of count effectively adds third container to each count box*/
+.count::after {
+  content: "";
+  flex: 1;
 }
