@@ -1,5 +1,5 @@
 // javascript by Trever J. Bruhn 2022
-console.log("Branch: add search");
+
 //function to instantiate leaflet map
 function createMap() {
   //==== define basemaps to be used in the map ====
@@ -121,8 +121,6 @@ function createMap() {
       html: "Holiday Farm Fire Burn Boundary",
     }),
   }).addTo(map);
-
-  //[44.20864272559424, -122.50167846679689]
 
   //==== add in layer controls ====
   //create basemaps object to be passed to layercontrol
