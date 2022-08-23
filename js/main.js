@@ -524,6 +524,8 @@ function filter(map, rebuild, sales, filtered) {
     var allElse = ".countBox:not(." + this.classList[2] + ")";
     $(allElse).toggle();
 
+    let filterId = this.lastElementChild.id;
+
     //array for determining if this is a rebuild status
     var status = [
       "NotStarted",
@@ -549,22 +551,22 @@ function filter(map, rebuild, sales, filtered) {
       //if not currently filtered change filtered and filter layers
       filtered = true;
       //apply filters
-      if (status.includes(this.id)) {
+      if (status.includes(filterId)) {
         //make sure layer is added to map
         map.addLayer(rebuild);
         //filter rebuild status layer (1) by status and filter temp housing (0) to hide it
         rebuild.setLayerDefs({
-          1: "RebuildStatus='" + this.id + "'",
+          1: "RebuildStatus='" + filterId + "'",
           0: "TempHousing='No'",
         });
         //turn off sales
         map.removeLayer(sales);
-      } else if (this.id === "sold") {
+      } else if (filterId === "sold") {
         //make sure layer is added to map
         map.addLayer(sales);
         //turn off sales
         map.removeLayer(rebuild);
-      } else if (this.id === "tempHouse") {
+      } else if (filterId === "tempHouse") {
         //make sure layer is added to map
         map.addLayer(rebuild);
         //set temp housing (0) to yes to show and filter rebuild status layer (1) bu null to hide it
