@@ -1,5 +1,5 @@
 // javascript by Trever J. Bruhn 2022
-console.log("branch add search");
+
 //function to instantiate leaflet map
 function createMap() {
   //==== define basemaps to be used in the map ====
@@ -496,6 +496,49 @@ function countFeatures(map, rebuild, sales) {
         } else {
           $("#tempHouse").html(count);
         }
+      });
+
+    // count parcels that are not complete and have not sold
+    //get list of maplots for sold
+    sales
+      .query()
+      .layer(0)
+      .intersects(map.getBounds())
+      .fields("SalesLayerCityJoin_SalesforGISLayer_maplot")
+      .run(function (error, featureCollection) {
+        sold_array = [];
+        L.geoJSON(featureCollection, {
+          onEachFeature: function (feature, layer) {
+            sold_array.push(
+              feature.properties.SalesLayerCityJoin_SalesforGISLayer_maplot
+            );
+          },
+        });
+      });
+
+    //get list of map lots for in progress
+    rebuild
+      .query()
+      .layer(1)
+      .where("NOT RebuildStatus = 'PermComplete'")
+      .intersects(map.getBounds())
+      .fields("maptaxlot")
+      .run(function (error, featureCollection) {
+        iP_notsold = [];
+        L.geoJSON(featureCollection, {
+          onEachFeature: function (feature, layer) {
+            if (sold_array.includes(feature.properties.maptaxlot)) {
+            } else {
+              iP_notsold.push(feature.properties.maptaxlot);
+            }
+          },
+        });
+        console.log("sold " + sold_array.length);
+        console.log("ip not sold " + iP_notsold.length);
+        $("#ipNotSold").html(
+          iP_notsold.length +
+            " properties have not completed and have not been sold."
+        );
       });
   });
 }
