@@ -38,6 +38,10 @@ footer a:hover {
   text-decoration: underline;
 }
 
+#ipNotSold {
+  float: right;
+}
+
 /*
   ========== Title ==========
   */
